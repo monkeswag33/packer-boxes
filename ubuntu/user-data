@@ -1,0 +1,17 @@
+#cloud-config
+autoinstall:
+    version: 1
+    locale: en_US
+    refresh-installer:
+        update: yes
+    identity:
+        hostname: vagrant
+        password: $6$Ja6vlUNhFaXNwCT9$OKAofxxeClI7CwRlRIUR5xV8Fh6BzBODnA6jzq9D29s3nAH6EWcHJbjlqSjJh9cN4kuxRuAI.s/5B1LP92KGp.
+        username: vagrant
+    apt:
+        package_update: false # Disable updates to make it quicker for packer to recognize machine
+        package_upgrade: false
+    ssh:
+        install-server: true
+    late-commands:
+        - "echo 'vagrant  ALL=(ALL)   NOPASSWD: ALL' >> /target/etc/sudoers.d/vagrant"
