@@ -101,11 +101,41 @@ source "virtualbox-iso" "ubuntu-2004" {
   ssh_wait_timeout        = "120m"
   vboxmanage              = [["modifyvm", "{{ .Name }}", "--memory", "${var.memory}"], ["modifyvm", "{{ .Name }}", "--cpus", "${var.cores}"]]
   virtualbox_version_file = ".vbox_version"
-  vm_name                 = "packer-ubuntu-20.04-amd64"
+  vm_name                 = "packer-ubuntu-2004-amd64"
+}
+
+source "virtualbox-iso" "ubuntu-2204" {
+  boot_command            = [
+	  "c<wait>",
+	  "linux /casper/vmlinuz --- autoinstall ds=\"nocloud-net;seedfrom=http://{{.HTTPIP}}:{{.HTTPPort}}/\"",
+	  "<enter><wait>",
+	  "initrd /casper/initrd",
+	  "<enter><wait>",
+	  "boot",
+	  "<enter>",
+  ]
+  boot_wait               = "5s"
+  guest_additions_path    = "VBoxGuestAdditions.iso"
+  guest_os_type           = "Ubuntu_64"
+  headless                = false # For some reason, headless needs to be false for Virtualbox Guest Additions to install without hanging
+  http_directory          = "ubuntu"
+  iso_checksum            = "sha256:84AEAF7823C8C61BAA0AE862D0A06B03409394800000B3235854A6B38EB4856F"
+  iso_urls                = ["isos/ubuntu-22.04-live-server-amd64.iso", "https://releases.ubuntu.com/22.04/ubuntu-22.04-live-server-amd64.iso"]
+  memory                  = var.memory
+  disk_size               = var.disk # 64 GB
+  shutdown_command        = "echo 'vagrant'|sudo -S shutdown -P now"
+  ssh_handshake_attempts  = "1000"
+  ssh_username            = "vagrant"
+  ssh_password            = "vagrant"
+  ssh_port                = 22
+  ssh_wait_timeout        = "120m"
+  vboxmanage              = [["modifyvm", "{{ .Name }}", "--memory", "${var.memory}"], ["modifyvm", "{{ .Name }}", "--cpus", "${var.cores}"]]
+  virtualbox_version_file = ".vbox_version"
+  vm_name                 = "packer-ubuntu-2204-amd64"
 }
 
 build {
-  sources = ["source.virtualbox-iso.ubuntu-2004"]
+  sources = ["source.virtualbox-iso.ubuntu-2004", "source.virtualbox-iso.ubuntu-2204"]
   provisioner "shell" {
     inline = [
       "sudo apt-get update",
@@ -128,6 +158,12 @@ build {
 
 build {
   sources = ["source.virtualbox-iso.centos7", "source.virtualbox-iso.centos8", "source.virtualbox-iso.centos9"]
+  provisioner "shell" {
+	  inline = [
+		  "sudo yum update -y",
+		  "sudo yum autoremove -y"
+	  ]
+  }
   provisioner "shell" {
     execute_command = "echo 'vagrant' | {{ .Vars }} sudo -S -E bash '{{ .Path }}'"
     script          = "centos/vbox-guest-additions-install.sh"
